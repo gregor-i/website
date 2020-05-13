@@ -1,4 +1,129 @@
 <html>
-<head></head>
-<body>Hello World</body>
+<head>
+    <script src="https://cdn.jsdelivr.net/npm/mathjs@7.0.0/dist/math.min.js"></script>
+    <script>
+    window.addEventListener('DOMContentLoaded', render)
+
+    function render(){
+        const n = 50
+        const seed = Math.floor(Math.random()*1000)
+        const iterations = 300
+        const deltaTime = 0.1
+
+        const p0 = initialPositions(n)
+        const attraction = randomPermutation(n, setupRandom(seed))
+        const repulsion = math.multiply(attraction, attraction, attraction, 0.1) //math.multiply(randomPermutation(n, setupRandom(seed + 1)), 0.2)
+        const M = math.subtract(attraction, math.add(math.identity(n), repulsion))
+        const S = matrixExponential(math.multiply(M, deltaTime), 50)
+
+        const canvas = document.querySelector("canvas")
+        const rect = canvas.getBoundingClientRect()
+        canvas.width = rect.width
+        canvas.height = rect.height
+
+        draw(canvas, iterations, n, p0, S)
+    }
+
+    function draw(canvas, iterations, n, p0, S){
+        const ctx = canvas.getContext("2d")
+
+        const scale = Math.min(canvas.width, canvas.height)
+
+        ctx.transform(scale / 2.0, 0, 0, scale / 2.0, canvas.width / 2.0, canvas.height / 2.0);
+        ctx.lineWidth = 3.0 / scale
+
+        ctx.beginPath();
+        ctx.arc(0, 0, 1, 0, 2 * Math.PI);
+        ctx.stroke();
+
+        function * iterate(n, p0, S) {
+          let p = p0
+          for (let i = 0; i < n; i++) {
+            p = math.multiply(p, S)
+            yield p;
+          }
+        }
+
+        const positions = [...iterate(iterations, p0, S)]
+
+        for(let i = 0; i<n; i++){
+            ctx.beginPath();
+            ctx.moveTo(p0._data[0][i], p0._data[1][i]);
+            positions.forEach(position => {
+                ctx.lineTo(position._data[0][i], position._data[1][i])
+            })
+            let r = Math.random() * 256
+            let g = Math.random() * 256
+            let b = Math.random() * 256
+            ctx.strokeStyle = `rgb(${r}, ${g}, ${b})`
+            ctx.stroke();
+        }
+    }
+
+    function setupRandom(i){
+        // https://stackoverflow.com/a/19301306/10972520
+        var mask = 0xffffffff;
+        var m_w = (123456789 + i) & mask;
+        var m_z = (987654321 - i) & mask;
+
+        return function(){
+            m_z = (36969 * (m_z & 65535) + (m_z >> 16)) & mask;
+            m_w = (18000 * (m_w & 65535) + (m_w >> 16)) & mask;
+            var result = ((m_z << 16) + (m_w & 65535)) >>> 0;
+            result /= 4294967296;
+            return result;
+        }
+    }
+
+    function position(time, p0, M){
+        return math.multiply(math.transpose(p0), matrixExponential(math.multiply(M, time), 50))
+    }
+
+    function initialPositions(n){
+        const p0 = []
+        for(let i = 0; i<n; i++){
+            const angle = Math.PI * 2.0 / n * i
+            p0[i] = [Math.sin(angle), Math.cos(angle)]
+        }
+        return math.transpose(math.matrix(p0))
+    }
+
+    function randomPermutation(n, random){
+        const T = []
+        for(let i = 0; i<n; i++){
+            T[i] = new Array(n).fill(0)
+            T[i][i] = 1
+        }
+
+        for(let i = 0; i < n*n; i++){
+            const from = Math.floor(random() * n);
+            const to = Math.floor(random() * n);
+            const swap = T[to]
+            T[to] = T[from]
+            T[from] = swap
+        }
+        return math.matrix(T)
+    }
+
+    function matrixExponential(M, steps){
+        const n = M.size()[0]
+        let sum = math.identity(n)
+        let power = math.identity(n)
+        for(let i = 1; i < steps; i++){
+            power = math.multiply(power, M, 1.0 / i)
+            sum = math.add(sum, power)
+        }
+        return sum
+    }
+
+    </script>
+</head>
+<body style="padding: 0; margin: 0;">
+    <div style="height: 100vh; width: 100vw;">
+        <canvas width="1000" height="1000" style="width: 100%; height: 100%; object-fit: contain;"></canvas>
+    </div>
+    <span style="position: absolute; top: 0; right: 0; padding: 16px">
+        <button onclick="render()">Redraw</button>
+    </span>
+</body>
 </html>
