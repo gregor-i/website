@@ -1,0 +1,30 @@
+{
+  "name": "website",
+  "version": "1.0.0",
+  "scripts": {
+    "mkdir": "mkdir build -p",
+    "server": "static -c-1 build",
+    "watch": "run-p watch-*",
+    "develop": "run-p mkdir watch server",
+    "watch-js": "nodemon --watch src/main/js -e '*' --exec 'npm run build-js'",
+    "watch-css": "nodemon --watch src/main/css -e '*' --exec 'npm run build-css'",
+    "watch-html": "nodemon --watch src/main/html -e '*' --exec 'npm run build-html'",
+    "watch-favicon": "nodemon --watch src/main/js -e '*' --watch makeFavicon.js --exec 'npm run build-favicon'",
+    "build": "run-s mkdir build-js build-css build-html",
+    "build-js": "webpack --mode production",
+    "build-css": "cp src/main/css/* build/.",
+    "build-html": "cp src/main/html/* build/.",
+    "build-favicon": "node makeFavicon.js"
+  },
+  "dependencies": {
+    "mathjs": "^9.4.1"
+  },
+  "devDependencies": {
+    "node-static": "^0.7.11",
+    "nodemon": "^2.0.7",
+    "npm-run-all": "^4.1.5",
+    "webpack": "^5.37.1",
+    "webpack-cli": "^4.7.0"
+  },
+  "type": "module"
+}
