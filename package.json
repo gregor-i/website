@@ -7,13 +7,11 @@
     "watch": "run-p watch-*",
     "develop": "run-p mkdir watch server",
     "watch-js": "nodemon --watch src/main/js -e '*' --exec 'npm run build-js'",
-    "watch-css": "nodemon --watch src/main/css -e '*' --exec 'npm run build-css'",
-    "watch-html": "nodemon --watch src/main/html -e '*' --exec 'npm run build-html'",
+    "watch-static": "nodemon --watch src/main/static -e '*' --exec 'npm run build-static'",
     "watch-favicon": "nodemon --watch src/main/js -e '*' --watch makeFavicon.js --exec 'npm run build-favicon'",
-    "build": "run-s mkdir build-js build-css build-html",
+    "build": "run-s mkdir build-js build-static",
     "build-js": "webpack --mode production",
-    "build-css": "cp src/main/css/* build/.",
-    "build-html": "cp src/main/html/* build/.",
+    "build-static": "cp src/main/static/* build/.",
     "build-favicon": "node makeFavicon.js"
   },
   "dependencies": {
