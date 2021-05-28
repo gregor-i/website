@@ -9,9 +9,10 @@ export function miceSvg(seed, {n = 50, iterations = 300, deltaTime = 0.1, stroke
 
   function * iterate(n, p0, S) {
     let p = p0
+    yield p
     for (let i = 0; i < n; i++) {
       p = multiply(p, S)
-      yield p;
+      yield p
     }
   }
 
@@ -20,39 +21,59 @@ export function miceSvg(seed, {n = 50, iterations = 300, deltaTime = 0.1, stroke
   return svg(p0, positions, n, strokeWidth)
 }
 
-function circle(strokeWidth){
- return `
-<linearGradient id="hslGradientUpper">
-  <stop offset="0%"   stop-color="hsl(180, 100%, 50%)" />
-  <stop offset="33%"  stop-color="hsl(120, 100%, 50%)" />
-  <stop offset="67%"  stop-color="hsl( 60, 100%, 50%)" />
-  <stop offset="100%" stop-color="hsl(  0, 100%, 50%)" />
-</linearGradient>
-<linearGradient id="hslGradientLower">
-  <stop offset="0%"   stop-color="hsl(180, 100%, 50%)" />
-  <stop offset="33%"  stop-color="hsl(240, 100%, 50%)" />
-  <stop offset="67%"  stop-color="hsl(300, 100%, 50%)" />
-  <stop offset="100%" stop-color="hsl(360, 100%, 50%)" />
-</linearGradient>
-<path d="M -1 0 a 1 1 0 1 0 2 0" stroke="url(#hslGradientLower)" stroke-width="${strokeWidth}" fill="none" />
-<path d="M 1 0 a 1 1 0 1 0 -2 0" stroke="url(#hslGradientUpper)" stroke-width="${strokeWidth}" fill="none" />
-`;
+function polygon(points, n, strokeWidth){
+  let group = `<g id="polygon">`
+  for(let i = 0; i<n; i++){
+    const j = (i+1) % n
+    group += `
+    <linearGradient id="polygonGradient${i}"
+       x1="${points._data[0][i]}" y1="${points._data[1][i]}"
+       x2="${points._data[0][j]}" y2="${points._data[1][j]}"
+       gradientUnits="userSpaceOnUse">
+      <stop offset="0%"   stop-color="${color(i, n)}" />
+      <stop offset="100%" stop-color="${color(j, n)}" />
+    </linearGradient>
+    `
+    group += `
+      <line
+       x1="${points._data[0][i]}" y1="${points._data[1][i]}"
+       x2="${points._data[0][j]}" y2="${points._data[1][j]}"
+       stroke="url(#polygonGradient${i})" stroke-width="${strokeWidth}"
+       stroke-linecap="round"
+      />
+    `
+  }
+  group += `</g>`
+  return group
+}
+
+function mousePath(i, n, positions, strokeWidth){
+  let path = `<path class="mouse" fill="none" stroke="${color(i, n)}" stroke-width="${strokeWidth}" d="`
+  positions.forEach((position, index) => {
+    if(index == 0)
+      path += `M ${position._data[0][i]} ${position._data[1][i]} `
+    else
+      path += `L ${position._data[0][i]} ${position._data[1][i]} `
+  })
+  path += `" />`;
+  return path
 }
 
 function svg(p0, positions, n, strokeWidth){
   let size = 1 + strokeWidth/2
   let svg = `<svg viewBox="${-size} ${-size} ${2*size} ${2*size}" xmlns="http://www.w3.org/2000/svg">\n`;
+  svg += polygon(p0, n, strokeWidth);
+  svg += "<g id='mice'>"
   for(let i = 0; i<n; i++){
-      let path = `<path d="M ${p0._data[0][i]} ${p0._data[1][i]} `
-      positions.forEach(position => {
-          path += `L ${position._data[0][i]} ${position._data[1][i]} `
-      })
-      path += `" class="mouse" style="mix-blend-mode: hue;" fill="none" stroke="hsl(${i / n * 360 - 90}, 100%, 50%)" stroke-width="${strokeWidth}"/>`;
-      svg += path + "\n";
+    svg += mousePath(i, n, positions, strokeWidth)
   }
-  svg += circle(strokeWidth);
+  svg += "</g>"
   svg += "</svg>";
   return svg;
+}
+
+function color(i, n){
+  return `hsl(${i / n * 360 - 90}, 100%, 50%)`
 }
 
 function setupRandom(i){
