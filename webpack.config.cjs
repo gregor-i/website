@@ -3,11 +3,12 @@ module.exports = (env, options) => {
 
   return {
     entry: {
-      app: ['./src/main/js/index.js']
+      mice: './src/main/js/mice-main.js',
+      secret: './src/main/js/secret-main.js',
     },
     output: {
-      filename: '../build/mice.js',
-      publicPath: '/'
+      filename: '[name].js',
+      path: __dirname + '/build',
     },
     devtool: devMode ? 'source-map' : undefined
   }
