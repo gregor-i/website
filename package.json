@@ -9,7 +9,7 @@
     "watch-js": "nodemon --watch src/main/js -e '*' --exec 'npm run build-js'",
     "watch-static": "nodemon --watch src/main/static -e '*' --exec 'npm run build-static'",
     "watch-favicon": "nodemon --watch src/main/js -e '*' --watch makeFavicon.js --exec 'npm run build-favicon'",
-    "build": "run-s mkdir build-js build-static",
+    "build": "run-s mkdir build-js build-static build-favicon",
     "build-js": "webpack --mode production",
     "build-static": "cp src/main/static/* build/.",
     "build-favicon": "node makeFavicon.js"
