@@ -1,0 +1,140 @@
+<head>
+  <style> body { margin: 0; } </style>
+  <title>Skill Graph</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <script src="//unpkg.com/force-graph"></script>
+</head>
+
+<body>
+<div id="graph"></div>
+
+<script>
+    const tree = {
+      "Programming Languages": {
+        Scala: {
+          Akka: {},
+          Play: {},
+          "Scala.js": {}
+        },
+        Javascript: {
+          Typescript: {},
+          Webpack: {},
+          Snabbdom: {},
+        },
+        Elixir: {
+          Phoenix: {},
+          LiveView: {},
+          Oban: {}
+        },
+        Java: {},
+        "C/C++": {
+          Cuda: {}
+        },
+        Haskell: {},
+        Prolog: {},
+        Python: {}
+      },
+      Frontend: {
+        CSS: {
+          Bootstrap: {},
+          Sass: {},
+          Bulma: {},
+          Fontawesome: {}
+        },
+        WebGL: {},
+        "Single-page application": {},
+        "Progressive Web Apps": {}
+      },
+      Devops: {
+        Heroku: {},
+        Kubernetes: {},
+        Docker: {},
+        Monitoring: {
+          Prometheus: {},
+          Grafana: {}
+        },
+      },
+      Tools: {
+         Linux: {},
+         Git: {},
+         GitHub: {},
+         CI: {
+           Jenkins: {},
+           "Github-Actions": {}
+         },
+         "IntelliJ IDEA": {}
+      },
+      Architecture: {
+        HTTP: {
+          Rest: {},
+          GraphQL: {},
+        },
+        PostgreSQL: {},
+        Microservices: {},
+        "Event Sourcing": {
+          Kafka: {},
+          RabbitMQ: {}
+        },
+        "Domain-driven design": {}
+      },
+      Development: {
+        "Test-driven Development": {},
+        Agile: {
+          Scrum: {},
+          Kanban: {}
+        },
+        Jira: {}
+      }
+    }
+
+    function treeToNodes(tree, group, level){
+      return Object.keys(tree).flatMap(key => [{id: key, name: key, group: group, level: level}].concat(treeToNodes(tree[key], group, level + 1)))
+    }
+
+    function treeToLinks(parentId, tree){
+      return Object.keys(tree)
+            .flatMap(child => [{source: parentId, target: child}].concat(treeToLinks(child, tree[child])))
+    }
+
+    const nodes = [{id: "root", name: "", level: 0}].concat(Object.keys(tree).flatMap(group => [{id: group, name: group, group: group, level: 1}].concat(treeToNodes(tree[group], group, 2))))
+    const links = Object.keys(tree).flatMap(group => treeToLinks(group, tree[group]))
+
+    console.log(nodes, links)
+
+    function fontSizeFactorByLevel(level){
+      switch(level){
+        case 0:
+        case 1:
+          return 1.5
+        case 2:
+          return 1.0
+        case 3:
+        default:
+          return 0.8
+      }
+    }
+
+    const Graph = ForceGraph()
+      (document.getElementById('graph'))
+        .graphData({nodes, links})
+        .nodeId('id')
+        .nodeAutoColorBy('group')
+        .nodeCanvasObject((node, ctx, globalScale) => {
+          const label = node.name;
+          const fontSize = fontSizeFactorByLevel(node.level) * 12/globalScale;
+          ctx.font = `${fontSize}px Sans-Serif`;
+          const textWidth = ctx.measureText(label).width;
+          const bckgDimensions = [textWidth, fontSize].map(n => n + fontSize * 0.2); // some padding
+
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+          ctx.fillRect(node.x - bckgDimensions[0] / 2, node.y - bckgDimensions[1] / 2, bckgDimensions[0], bckgDimensions[1]);
+
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillStyle = node.color;
+          ctx.fillText(label, node.x, node.y);
+
+          node.__bckgDimensions = bckgDimensions; // to re-use in nodePointerAreaPaint
+        })
+  </script>
+</body>
